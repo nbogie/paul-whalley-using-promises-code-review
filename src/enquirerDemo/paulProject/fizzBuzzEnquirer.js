@@ -1,9 +1,10 @@
 const { prompt } = require("enquirer");
 
 prompt({
-    type: "input",
+    type: "autocomplete",
     message: "What is your fizzBuzz number?",
     name: "fizzBuzzNumber",
+    choices: ["10", "20" ,"30"]
 }).then(generateFizzBuzz);
 
 function generateFizzBuzz(num) {
