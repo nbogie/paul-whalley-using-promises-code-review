@@ -16,10 +16,14 @@ async function promptForEpisodeSearchTerm() {
 }
 /**
  *
- * @param {string[]} episodeTitlesToChooseFrom
+ * @param {Object[]} episodeObjectsToChooseFrom
  * @returns {Promise<string>}
  */
-async function selectEpisodeTitleFromChoices(episodeTitlesToChooseFrom) {
+async function selectEpisodeTitleFromChoices(episodeObjectsToChooseFrom) {
+    const episodeTitlesToChooseFrom = makeNameArrayFromEpisodes(
+        episodeObjectsToChooseFrom
+    );
+
     const promptResponse = await prompt({
         type: "autocomplete",
         message: "Are any of these your episode?",
@@ -70,6 +74,9 @@ function episodeHasTermInAnyPropertyValue(episode, searchKey) {
 function makeNameArrayFromEpisodes(inputEpisodes) {
     return inputEpisodes.map((obj) => obj.name);
 }
+function findEpisodeWithMatchingName(relevantEpisodes, soughtTitle) {
+    return relevantEpisodes.find((episode) => episode.name === soughtTitle);
+}
 
 async function mainTask() {
     const searchTerm = await promptForEpisodeSearchTerm();
@@ -78,11 +85,19 @@ async function mainTask() {
         fetchedEpisodesResult.data,
         searchTerm
     );
-    const episodeTitles = makeNameArrayFromEpisodes(relevantEpisodes);
-    const episodeTitle = await selectEpisodeTitleFromChoices(episodeTitles);
-    const selectedEpisodeData = relevantEpisodes.find(
-        (episode) => episode.name === episodeTitle
+    if (relevantEpisodes.length === 0) {
+        console.log("No episodes match your search term");
+        return;
+    }
+
+    const selectedEpisodeTitle = await selectEpisodeTitleFromChoices(
+        relevantEpisodes
     );
+    const selectedEpisodeData = findEpisodeWithMatchingName(
+        relevantEpisodes,
+        selectedEpisodeTitle
+    );
+
     console.log("Here is information about your episode:");
     console.log(selectedEpisodeData);
 }
