@@ -1,19 +1,33 @@
 const { prompt } = require("enquirer");
 const axios = require("axios").default;
 
-prompt({
-    type: "input",
-    message: "Give me information to find your Simpsons episode?",
-    name: "key",
-}).then(mainTask);
+function queryEpisodePrompt() {
+    return prompt({
+        type: "input",
+        message: "Give me information to find your Simpsons episode?",
+        name: "key",
+    });
+}
 
-async function mainTask(search) {
+function selectEpisode(promptData) {
+    return prompt({
+        type: "autocomplete",
+        message: "Are any of these your episode?",
+        name: "name",
+        choices: promptData
+    });
+}
+
+async function mainTask() {
+    const prompt = await queryEpisodePrompt();
     const result = await axios.get("https://api.tvmaze.com/shows/83/episodes");
-    let relevantData = filterData(result.data, search.key)
-    console.log("Is your episode one of these: ");
-    for (let i of relevantData){
-        console.log(i.name);
-    }
+    let relevantData = filterData(result.data, prompt.key)
+    const titleArray = makeNameArrayFromObjects(relevantData);
+    const selectedEpisode = await selectEpisode(titleArray);
+    console.log(selectedEpisode)
+    const selectedEpisodeData = relevantData.find( episodes => episodes.name === selectedEpisode.name);
+    console.log("Here is information about your episode:")
+    console.log(selectedEpisodeData);
 }
 
 function filterData(data, searchKey) {  //Function filters for objects that contain values
@@ -23,3 +37,13 @@ function filterData(data, searchKey) {  //Function filters for objects that cont
         );
     });
 }
+
+function makeNameArrayFromObjects(inputArrayOfObject) {
+    nameArray = []
+    for (let i of inputArrayOfObject) {
+        nameArray.push(i.name)
+    }
+    return nameArray
+}
+
+mainTask();
